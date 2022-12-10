@@ -14,11 +14,10 @@ const client = new Discord.Client({
 })
 
 client.once('ready', () => {
-  console.log("Competitve Minecraft been has been enabled!");
+  console.log("Discord client bot enabled!");
 });
 
 var mysql = require('mysql');
-
 var con = mysql.createConnection({
   host: "sql5.freesqldatabase.com",
   user: "sql5527360",
@@ -31,18 +30,9 @@ con.connect(function(err) {
   console.log("Connected!");
 });
 
-app.listen(3000, () => {
-  console.log("Express app listening and enabled...");
-})
-
-app.get("/", (req, res) => {
-  res.send("Enabled...");;
-})
-
 client.on('guildMemberAdd', member => {
   let channel = member.guild.channels.cache.get('1031672423956873296');
-  var role = member.guild.roles.cache.find(role => role.name === "Unverified");
-  member.roles.add(role);
+  member.roles.add(member.guild.roles.cache.find(role => role.name === "Unverified"));
   channel.send({
     embeds: [new EmbedBuilder()
       .setDescription(`Welcome ${member.user}! Get started by verifing your Minecraft account!`)
@@ -63,16 +53,12 @@ client.on('messageCreate', message => {
     message.delete();
     if (message.channelId !== '1031670511723348011') return;
     if (args.length == 1) {
-      console.log(args[0]);
       con.query("SELECT name, uuid FROM players WHERE code = '" + args[0] + "'", function(err, result) {
         if (err) throw err;
         if (typeof result[0] !== 'undefined') {
-          var display = result[0].name;
-          message.channel.send("You have successfully linked your Discord to '" + display + "'!")
-          var unverified = message.member.guild.roles.cache.find(role => role.name === "Unverified");
-          var verified = message.member.guild.roles.cache.find(role => role.name === "Verified");
-          message.member.roles.remove(unverified);
-          message.member.roles.add(verified);
+          message.channel.send("You have successfully linked your Discord to '" + result[0].name + "'!")
+          message.member.roles.remove(message.member.guild.roles.cache.find(role => role.name === "Unverified"));
+          message.member.roles.add(message.member.guild.roles.cache.find(role => role.name === "Verified"));
           con.query("INSERT INTO discords (uuid, discord) VALUES ('" + result[0].uuid + "', '" + message.member.id + "')",   function(err, res) {
             if (err) throw err;
           });
